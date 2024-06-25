@@ -3,6 +3,7 @@ let dataChart, scatterChart;
 let currentPattern = [];
 let currentPatternAnswer;
 const scatterData = [];
+let gaInterval;
 
 function updatePoints(amount) {
     points += amount;
@@ -170,102 +171,11 @@ function drawRegressionLine() {
     updatePoints(3);
 }
 
-// 신경망 시각화 (이 부분은 원본 코드에 없었지만, 완성도를 위해 추가했습니다)
-function drawNeuralNetwork() {
-    const canvas = document.getElementById('networkCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const layers = [3, 4, 4, 2];
-    const layerDistance = canvas.width / (layers.length + 1);
-    const nodeRadius = 15;
-
-    for (let i = 0; i < layers.length; i++) {
-        const layerSize = layers[i];
-        const layerX = (i + 1) * layerDistance;
-        const nodeDistance = canvas.height / (layerSize + 1);
-
-        for (let j = 0; j < layerSize; j++) {
-            const nodeY = (j + 1) * nodeDistance;
-            
-            // Draw node
-            ctx.beginPath();
-            ctx.arc(layerX, nodeY, nodeRadius, 0, 2 * Math.PI);
-            ctx.fillStyle = 'white';
-            ctx.fill();
-            ctx.strokeStyle = 'black';
-            ctx.stroke();
-
-            // Draw connections to next layer
-            if (i < layers.length - 1) {
-                const nextLayerSize = layers[i + 1];
-                const nextLayerX = (i + 2) * layerDistance;
-                const nextNodeDistance = canvas.height / (nextLayerSize + 1);
-
-                for (let k = 0; k < nextLayerSize; k++) {
-                    const nextNodeY = (k + 1) * nextNodeDistance;
-                    ctx.beginPath();
-                    ctx.moveTo(layerX + nodeRadius, nodeY);
-                    ctx.lineTo(nextLayerX - nodeRadius, nextNodeY);
-                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
-                    ctx.stroke();
-                }
-            }
-        }
-    }
-    updatePoints(2);
-}
-
-// 5. 이미지 분류 시뮬레이션
-const images = [
-    { src: 'cat.jpg', label: '고양이' },
-    { src: 'dog.jpg', label: '강아지' },
-    { src: 'bird.jpg', label: '새' },
-    { src: 'fish.jpg', label: '물고기' }
-];
-
-function setupImageClassification() {
-    const container = document.getElementById('imageContainer');
-    images.forEach(img => {
-        const imgElement = document.createElement('img');
-        imgElement.src = img.src;
-        imgElement.onclick = () => classifyImage(img.label);
-        container.appendChild(imgElement);
-    });
-}
-
-function classifyImage(label) {
-    const result = document.getElementById('classificationResult');
-    result.textContent = `AI의 추측: 이 이미지는 ${label}입니다.`;
-    updatePoints(2);
-}
-
-// 6. 간단한 챗봇 체험
-function sendMessage() {
-    const userInput = document.getElementById('userInput').value;
-    const chatbox = document.getElementById('chatbox');
-    chatbox.innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
-    
-    // 간단한 응답 로직
-    let response = "죄송해요, 잘 모르겠어요.";
-    if (userInput.includes("안녕")) {
-        response = "안녕하세요! 반갑습니다.";
-    } else if (userInput.includes("날씨")) {
-        response = "오늘 날씨는 맑습니다.";
-    } else if (userInput.includes("이름")) {
-        response = "제 이름은 AI 챗봇입니다.";
-    }
-    
-    chatbox.innerHTML += `<p><strong>AI:</strong> ${response}</p>`;
-    chatbox.scrollTop = chatbox.scrollHeight;
-    document.getElementById('userInput').value = '';
-    updatePoints(1);
-}
-
-// 7. 음성 인식 시뮬레이션
+// 음성 인식 시뮬레이션
 function startVoiceRecognition() {
     const result = document.getElementById('voiceResult');
     result.textContent = "음성을 인식 중입니다...";
+    document.getElementById('startVoiceRecognition').disabled = true;
     setTimeout(() => {
         const randomPhrases = [
             "안녕하세요",
@@ -275,58 +185,12 @@ function startVoiceRecognition() {
         ];
         const recognizedText = randomPhrases[Math.floor(Math.random() * randomPhrases.length)];
         result.textContent = `인식된 텍스트: "${recognizedText}"`;
+        document.getElementById('startVoiceRecognition').disabled = false;
         updatePoints(3);
     }, 2000);
 }
 
-// 8. 데이터 정렬 시각화
-let dataToSort = [];
-
-function generateRandomData() {
-    dataToSort = Array.from({length: 10}, () => Math.floor(Math.random() * 100));
-    visualizeData();
-}
-
-function visualizeData() {
-    const container = document.getElementById('sortingVisualization');
-    container.innerHTML = '';
-    dataToSort.forEach(value => {
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.style.height = `${value * 2}px`;
-        container.appendChild(bar);
-    });
-}
-
-function startSorting() {
-    const steps = bubbleSort(dataToSort.slice());
-    animateSorting(steps);
-}
-
-function bubbleSort(arr) {
-    const steps = [];
-    for (let i = 0; i < arr.length; i++) {
-        for (let j = 0; j < arr.length - i - 1; j++) {
-            if (arr[j] > arr[j + 1]) {
-                [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-                steps.push([...arr]);
-            }
-        }
-    }
-    return steps;
-}
-
-function animateSorting(steps) {
-    steps.forEach((step, index) => {
-        setTimeout(() => {
-            dataToSort = step;
-            visualizeData();
-            if (index === steps.length - 1) updatePoints(5);
-        }, index * 500);
-    });
-}
-
-// 9. 간단한 유전 알고리즘 시뮬레이션
+// 유전 알고리즘 시뮬레이션
 let targetString = "Hello, World!";
 let populationSize = 100;
 let mutationRate = 0.01;
@@ -335,17 +199,26 @@ function startGeneticAlgorithm() {
     document.getElementById('targetString').textContent = targetString;
     let population = initializePopulation();
     let generation = 0;
-    const intervalId = setInterval(() => {
+    document.getElementById('startGAButton').textContent = '멈추기';
+    document.getElementById('startGAButton').onclick = stopGeneticAlgorithm;
+
+    gaInterval = setInterval(() => {
         population = evolve(population);
         const bestIndividual = population[0];
         document.getElementById('gaResult').textContent = 
             `세대: ${generation}, 최적 해: ${bestIndividual}`;
         if (bestIndividual === targetString) {
-            clearInterval(intervalId);
+            stopGeneticAlgorithm();
             updatePoints(10);
         }
         generation++;
     }, 100);
+}
+
+function stopGeneticAlgorithm() {
+    clearInterval(gaInterval);
+    document.getElementById('startGAButton').textContent = '시뮬레이션 시작';
+    document.getElementById('startGAButton').onclick = startGeneticAlgorithm;
 }
 
 function initializePopulation() {
@@ -390,13 +263,13 @@ function mutate(individual) {
     ).join('');
 }
 
-// 10. 퍼즐 게임
+// 퍼즐 게임
 let puzzleState = [1, 2, 3, 4, 5, 6, 7, 8, 0];
 let moveCount = 0;
 
 function setupPuzzle() {
     const container = document.getElementById('puzzleContainer');
-    container.innerHTML = ''; // 기존 내용을 지웁니다.
+    container.innerHTML = ''; // Clear existing pieces
     puzzleState.forEach((num, index) => {
         const piece = document.createElement('div');
         piece.className = 'puzzle-piece';
@@ -408,9 +281,9 @@ function setupPuzzle() {
 }
 
 function shufflePuzzle() {
-    puzzleState = puzzleState.sort(() => Math.random() - 0.5);
-    updatePuzzleDisplay();
+    puzzleState = [1, 2, 3, 4, 5, 6, 7, 8, 0].sort(() => Math.random() - 0.5);
     moveCount = 0;
+    updatePuzzleDisplay();
     document.getElementById('moveCount').textContent = `이동 횟수: ${moveCount}`;
 }
 
@@ -418,8 +291,8 @@ function movePiece(index) {
     const zeroIndex = puzzleState.indexOf(0);
     if (isAdjacent(index, zeroIndex)) {
         [puzzleState[index], puzzleState[zeroIndex]] = [puzzleState[zeroIndex], puzzleState[index]];
-        updatePuzzleDisplay();
         moveCount++;
+        updatePuzzleDisplay();
         document.getElementById('moveCount').textContent = `이동 횟수: ${moveCount}`;
         if (isPuzzleSolved()) {
             alert('퍼즐을 완성했습니다!');
@@ -446,3 +319,16 @@ function updatePuzzleDisplay() {
 function isPuzzleSolved() {
     return puzzleState.every((num, index) => num === (index + 1) % 9);
 }
+
+// 초기화 함수
+function initializeAll() {
+    drawChart();
+    generatePattern();
+    initScatterPlot();
+    setupPuzzle();
+    document.getElementById('startVoiceRecognition').onclick = startVoiceRecognition;
+    document.getElementById('startGAButton').onclick = startGeneticAlgorithm;
+}
+
+// 페이지 로드 시 모든 기능 초기화
+window.onload = initializeAll;
