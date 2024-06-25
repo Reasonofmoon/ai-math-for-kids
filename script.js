@@ -44,6 +44,7 @@ function drawChart() {
             }]
         },
         options: {
+            responsive: true,
             scales: {
                 y: {
                     beginAtZero: true
@@ -112,6 +113,7 @@ function initScatterPlot() {
             }]
         },
         options: {
+            responsive: true,
             scales: {
                 x: {
                     type: 'linear',
@@ -123,4 +125,79 @@ function initScatterPlot() {
                 const dataX = scatterChart.scales.x.getValueForPixel(canvasPosition.x);
                 const dataY = scatterChart.scales.y.getValueForPixel(canvasPosition.y);
                 
-                scatterData.push({x
+                scatterData.push({x: dataX, y: dataY});
+                scatterChart.update();
+                updatePoints(1);
+            }
+        }
+    });
+}
+
+function drawRegressionLine() {
+    if (scatterData.length < 2) {
+        alert('점을 최소 2개 이상 찍어주세요.');
+        return;
+    }
+
+    const n = scatterData.length;
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (let point of scatterData) {
+        sumX += point.x;
+        sumY += point.y;
+        sumXY += point.x * point.y;
+        sumX2 += point.x * point.x;
+    }
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    const minX = Math.min(...scatterData.map(p => p.x));
+    const maxX = Math.max(...scatterData.map(p => p.x));
+
+    scatterChart.data.datasets.push({
+        type: 'line',
+        label: '회귀선',
+        data: [
+            {x: minX, y: slope * minX + intercept},
+            {x: maxX, y: slope * maxX + intercept}
+        ],
+        borderColor: 'rgb(75, 192, 192)',
+        borderWidth: 2,
+        fill: false
+    });
+
+    scatterChart.update();
+    updatePoints(3);
+}
+
+// 신경망 시각화
+function drawNeuralNetwork() {
+    const canvas = document.getElementById('networkCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const layers = [3, 4, 4, 2];
+    const layerDistance = canvas.width / (layers.length + 1);
+    const nodeRadius = 15;
+
+    for (let i = 0; i < layers.length; i++) {
+        const layerSize = layers[i];
+        const layerX = (i + 1) * layerDistance;
+        const nodeDistance = canvas.height / (layerSize + 1);
+
+        for (let j = 0; j < layerSize; j++) {
+            const nodeY = (j + 1) * nodeDistance;
+            
+            // Draw node
+            ctx.beginPath();
+            ctx.arc(layerX, nodeY, nodeRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+
+            // Draw connections to next layer
+            if (i < layers.length - 1) {
+                const nextLayerSize = layers[i + 1];
+                const nextLayerX = (i + 2) * layerDistance;
+                const nextNodeDistance = canvas.height / (nextLayerSize + 1

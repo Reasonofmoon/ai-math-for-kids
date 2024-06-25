@@ -1,106 +1,203 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 수학 탐험: 초등학생을 위한 인터랙티브 웹앱</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <div class="container">
-        <h1>AI 수학 탐험: 초등학생을 위한 인터랙티브 웹앱</h1>
-        
-        <div id="pointsDisplay">포인트: 0</div>
-        
-        <div class="section" id="dataVisualization">
-            <h2>1. 데이터 시각화: 다양한 그래프</h2>
-            <select id="chartType">
-                <option value="bar">막대 그래프</option>
-                <option value="line">선 그래프</option>
-                <option value="pie">파이 차트</option>
-            </select>
-            <p>아래 입력란에 숫자를 넣고 '그래프 그리기' 버튼을 눌러보세요.</p>
-            <input type="number" id="data1" value="5">
-            <input type="number" id="data2" value="3">
-            <input type="number" id="data3" value="7">
-            <input type="number" id="data4" value="2">
-            <input type="number" id="data5" value="6">
-            <button onclick="drawChart()">그래프 그리기</button>
-            <canvas id="dataChart"></canvas>
-        </div>
+let points = 0;
+let dataChart, scatterChart;
+let currentPattern = [];
+let currentPatternAnswer;
+const scatterData = [];
 
-        <div class="section" id="patternRecognition">
-            <h2>2. 패턴 인식: 다음 숫자 예측하기</h2>
-            <select id="difficultyLevel">
-                <option value="easy">쉬움</option>
-                <option value="medium">보통</option>
-                <option value="hard">어려움</option>
-            </select>
-            <button onclick="generatePattern()">새로운 패턴</button>
-            <p>아래 숫자 패턴을 보고 다음에 올 숫자를 예측해보세요.</p>
-            <div id="patternDisplay"></div>
-            <input type="number" id="patternGuess">
-            <button onclick="checkPattern()">확인하기</button>
-            <p id="patternResult"></p>
-        </div>
+function updatePoints(amount) {
+    points += amount;
+    document.getElementById('pointsDisplay').textContent = `포인트: ${points}`;
+}
 
-        <div class="section" id="linearRegression">
-            <h2>3. 간단한 선형 회귀: 점 찍기</h2>
-            <p>그래프를 클릭해서 점을 찍어보세요. 그리고 '선 그리기' 버튼을 눌러 AI가 어떻게 선을 그리는지 확인해보세요.</p>
-            <canvas id="scatterPlot"></canvas>
-            <button onclick="drawRegressionLine()">선 그리기</button>
-        </div>
+// 데이터 시각화
+function drawChart() {
+    const ctx = document.getElementById('dataChart').getContext('2d');
+    const chartType = document.getElementById('chartType').value;
+    const data = [
+        document.getElementById('data1').value,
+        document.getElementById('data2').value,
+        document.getElementById('data3').value,
+        document.getElementById('data4').value,
+        document.getElementById('data5').value
+    ].map(Number);
 
-        <div class="section" id="neuralNetwork">
-            <h2>4. 간단한 신경망 시각화</h2>
-            <p>아래 버튼을 눌러 간단한 신경망 구조를 볼 수 있어요.</p>
-            <button onclick="drawNeuralNetwork()">신경망 그리기</button>
-            <canvas id="networkCanvas" width="400" height="300"></canvas>
-        </div>
+    if (dataChart) {
+        dataChart.destroy();
+    }
 
-        <div class="section" id="imageClassification">
-            <h2>5. 이미지 분류 시뮬레이션</h2>
-            <p>아래 이미지 중 하나를 선택하면 AI가 어떤 물체인지 추측해요.</p>
-            <div id="imageContainer"></div>
-            <p id="classificationResult"></p>
-        </div>
+    dataChart = new Chart(ctx, {
+        type: chartType,
+        data: {
+            labels: ['A', 'B', 'C', 'D', 'E'],
+            datasets: [{
+                label: '데이터 값',
+                data: data,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.6)',
+                    'rgba(54, 162, 235, 0.6)',
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ],
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+    updatePoints(1);
+}
 
-        <div class="section" id="chatbot">
-            <h2>6. 간단한 챗봇 체험</h2>
-            <div id="chatbox"></div>
-            <input type="text" id="userInput" placeholder="챗봇에게 메시지를 보내세요">
-            <button onclick="sendMessage()">전송</button>
-        </div>
+// 패턴 인식
+function generatePattern() {
+    const difficulty = document.getElementById('difficultyLevel').value;
+    let pattern = [];
+    let rule;
 
-        <div class="section" id="voiceRecognition">
-            <h2>7. 음성 인식 시뮬레이션</h2>
-            <button id="startVoiceRecognition">음성 인식 시작</button>
-            <p id="voiceResult"></p>
-        </div>
+    switch(difficulty) {
+        case 'easy':
+            rule = Math.floor(Math.random() * 5) + 1;
+            for (let i = 0; i < 5; i++) {
+                pattern.push(i * rule);
+            }
+            currentPatternAnswer = pattern[4] + rule;
+            break;
+        case 'medium':
+            rule = Math.floor(Math.random() * 3) + 2;
+            for (let i = 0; i < 5; i++) {
+                pattern.push(Math.pow(rule, i));
+            }
+            currentPatternAnswer = Math.pow(rule, 5);
+            break;
+        case 'hard':
+            for (let i = 0; i < 5; i++) {
+                pattern.push(Math.floor(Math.random() * 10));
+            }
+            rule = (pattern[4] - pattern[3]) + (pattern[3] - pattern[2]);
+            currentPatternAnswer = pattern[4] + rule;
+            break;
+    }
 
-        <div class="section" id="dataSorting">
-            <h2>8. 데이터 정렬 시각화</h2>
-            <button onclick="generateRandomData()">무작위 데이터 생성</button>
-            <button onclick="startSorting()">정렬 시작</button>
-            <div id="sortingVisualization"></div>
-        </div>
+    currentPattern = pattern;
+    document.getElementById('patternDisplay').textContent = pattern.join(', ') + ', ?';
+}
 
-        <div class="section" id="geneticAlgorithm">
-            <h2>9. 간단한 유전 알고리즘 시뮬레이션</h2>
-            <p>목표 문자열: <span id="targetString"></span></p>
-            <button onclick="startGeneticAlgorithm()">시뮬레이션 시작</button>
-            <p id="gaResult"></p>
-        </div>
+function checkPattern() {
+    const guess = parseInt(document.getElementById('patternGuess').value);
+    const result = document.getElementById('patternResult');
+    if (guess === currentPatternAnswer) {
+        result.textContent = "정답입니다! 패턴을 잘 이해했어요.";
+        updatePoints(5);
+    } else {
+        result.textContent = `아쉽네요. 정답은 ${currentPatternAnswer}입니다. 다시 도전해보세요!`;
+    }
+}
 
-        <div class="section" id="puzzleGame">
-            <h2>10. 퍼즐 게임</h2>
-            <div id="puzzleContainer"></div>
-            <button onclick="shufflePuzzle()">퍼즐 섞기</button>
-            <p id="moveCount">이동 횟수: 0</p>
-        </div>
-    </div>
+// 선형 회귀
+function initScatterPlot() {
+    const ctx = document.getElementById('scatterPlot').getContext('2d');
+    scatterChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: '데이터 포인트',
+                data: scatterData,
+                backgroundColor: 'rgb(255, 99, 132)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    type: 'linear',
+                    position: 'bottom'
+                }
+            },
+            onClick: function(e) {
+                const canvasPosition = Chart.helpers.getRelativePosition(e, scatterChart);
+                const dataX = scatterChart.scales.x.getValueForPixel(canvasPosition.x);
+                const dataY = scatterChart.scales.y.getValueForPixel(canvasPosition.y);
+                
+                scatterData.push({x: dataX, y: dataY});
+                scatterChart.update();
+                updatePoints(1);
+            }
+        }
+    });
+}
 
-    <script src="script.js"></script>
-</body>
-</html>
+function drawRegressionLine() {
+    if (scatterData.length < 2) {
+        alert('점을 최소 2개 이상 찍어주세요.');
+        return;
+    }
+
+    const n = scatterData.length;
+    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+    for (let point of scatterData) {
+        sumX += point.x;
+        sumY += point.y;
+        sumXY += point.x * point.y;
+        sumX2 += point.x * point.x;
+    }
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
+
+    const minX = Math.min(...scatterData.map(p => p.x));
+    const maxX = Math.max(...scatterData.map(p => p.x));
+
+    scatterChart.data.datasets.push({
+        type: 'line',
+        label: '회귀선',
+        data: [
+            {x: minX, y: slope * minX + intercept},
+            {x: maxX, y: slope * maxX + intercept}
+        ],
+        borderColor: 'rgb(75, 192, 192)',
+        borderWidth: 2,
+        fill: false
+    });
+
+    scatterChart.update();
+    updatePoints(3);
+}
+
+// 신경망 시각화
+function drawNeuralNetwork() {
+    const canvas = document.getElementById('networkCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const layers = [3, 4, 4, 2];
+    const layerDistance = canvas.width / (layers.length + 1);
+    const nodeRadius = 15;
+
+    for (let i = 0; i < layers.length; i++) {
+        const layerSize = layers[i];
+        const layerX = (i + 1) * layerDistance;
+        const nodeDistance = canvas.height / (layerSize + 1);
+
+        for (let j = 0; j < layerSize; j++) {
+            const nodeY = (j + 1) * nodeDistance;
+            
+            // Draw node
+            ctx.beginPath();
+            ctx.arc(layerX, nodeY, nodeRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+
+            // Draw connections to next layer
+            if (i < layers.length - 1) {
+                const nextLayerSize = layers[i + 1];
+                const nextLayerX = (i + 2) * layerDistance;
+                const nextNodeDistance = canvas.height / (nextLayerSize + 1
