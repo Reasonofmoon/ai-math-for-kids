@@ -58,6 +58,47 @@
             <button onclick="drawNeuralNetwork()">신경망 그리기</button>
             <canvas id="networkCanvas" width="400" height="300"></canvas>
         </div>
+
+        <div class="section" id="imageClassification">
+            <h2>5. 이미지 분류 시뮬레이션</h2>
+            <p>아래 이미지 중 하나를 선택하면 AI가 어떤 물체인지 추측해요.</p>
+            <div id="imageContainer"></div>
+            <p id="classificationResult"></p>
+        </div>
+
+        <div class="section" id="chatbot">
+            <h2>6. 간단한 챗봇 체험</h2>
+            <div id="chatbox"></div>
+            <input type="text" id="userInput" placeholder="챗봇에게 메시지를 보내세요">
+            <button onclick="sendMessage()">전송</button>
+        </div>
+
+        <div class="section" id="voiceRecognition">
+            <h2>7. 음성 인식 시뮬레이션</h2>
+            <button id="startVoiceRecognition">음성 인식 시작</button>
+            <p id="voiceResult"></p>
+        </div>
+
+        <div class="section" id="dataSorting">
+            <h2>8. 데이터 정렬 시각화</h2>
+            <button onclick="generateRandomData()">무작위 데이터 생성</button>
+            <button onclick="startSorting()">정렬 시작</button>
+            <div id="sortingVisualization"></div>
+        </div>
+
+        <div class="section" id="geneticAlgorithm">
+            <h2>9. 간단한 유전 알고리즘 시뮬레이션</h2>
+            <p>목표 문자열: <span id="targetString"></span></p>
+            <button onclick="startGeneticAlgorithm()">시뮬레이션 시작</button>
+            <p id="gaResult"></p>
+        </div>
+
+        <div class="section" id="puzzleGame">
+            <h2>10. 퍼즐 게임</h2>
+            <div id="puzzleContainer"></div>
+            <button onclick="shufflePuzzle()">퍼즐 섞기</button>
+            <p id="moveCount">이동 횟수: 0</p>
+        </div>
     </div>
 
     <script src="script.js"></script>
