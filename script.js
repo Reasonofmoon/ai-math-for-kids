@@ -212,31 +212,169 @@ function drawNeuralNetwork() {
 
     updatePoints(2);
 }
+// 이미지 데이터
+const imageData = [
+    { src: "image/roses_vintage.jpg", label: "roses", description: "빈티지 스타일의 장미 이미지" },
+    { src: "image/dandelion_field.jpg", label: "dandelion", description: "민들레 들판" },
+    { src: "image/tulips_windmill.jpg", label: "tulips", description: "풍차와 튤립 밭" },
+    { src: "image/sunflowers.jpg", label: "sunflowers", description: "해바라기 밭" },
+    { src: "image/dandelion_closeup.jpg", label: "dandelion", description: "민들레 클로즈업" },
+    { src: "image/roses_bouquet.jpg", label: "roses", description: "장미 꽃다발" },
+    { src: "image/dandelion_seeds.jpg", label: "dandelion", description: "민들레 씨앗" },
+    { src: "image/roses_fountain.jpg", label: "roses", description: "분수와 장미" },
+    { src: "image/tulips_colorful.jpg", label: "tulips", description: "다양한 색상의 튤립" }
+];
 
 // 이미지 분류 시뮬레이션
 function setupImageClassification() {
     const imageContainer = document.getElementById('imageContainer');
-    const img = document.createElement('img');
-    img.src = 'https://www.tensorflow.org/static/tutorials/images/classification_files/output_wBmEA9c0JYes_0.png?hl=ko';
-    img.alt = 'TensorFlow Image Classification Example';
-    img.style.maxWidth = '100%';
-    img.style.height = 'auto';
-    
-    img.onerror = function() {
-        imageContainer.textContent = '이미지를 불러오는 데 실패했습니다.';
-    };
+    imageContainer.innerHTML = ''; // 기존 내용 삭제
 
-    img.onload = function() {
-        imageContainer.appendChild(img);
-        img.onclick = function() {
-            const possibleClasses = ['선인장', '꽃', '나무', '산'];
-            const randomClass = possibleClasses[Math.floor(Math.random() * possibleClasses.length)];
-            const confidence = (Math.random() * 30 + 70).toFixed(2);
-            document.getElementById('classificationResult').textContent = `AI의 추측: ${randomClass} (확률: ${confidence}%)`;
-            updatePoints(3);
+    imageData.forEach((image, index) => {
+        const imgElement = document.createElement('img');
+        imgElement.src = image.src;
+        imgElement.alt = image.description;
+        imgElement.title = image.description; // 마우스 오버시 설명 표시
+        imgElement.style.width = '150px';
+        imgElement.style.height = '150px';
+        imgElement.style.objectFit = 'cover';
+        imgElement.style.margin = '5px';
+        imgElement.style.cursor = 'pointer';
+
+        imgElement.onclick = function() {
+            classifyImage(image.label, image.description);
         };
-    };
+
+        imageContainer.appendChild(imgElement);
+    });
 }
+
+function classifyImage(actualLabel, description) {
+    const labels = ['roses', 'dandelion', 'tulips', 'sunflowers'];
+    let predictedLabel;
+    let confidence;
+
+    // 80% 확률로 정확한 레이블 선택, 20% 확률로 랜덤 레이블 선택
+    if (Math.random() < 0.8) {
+        predictedLabel = actualLabel;
+        confidence = (Math.random() * 20 + 80).toFixed(2); // 80-100% 신뢰도
+    } else {
+        do {
+            predictedLabel = labels[Math.floor(Math.random() * labels.length)];
+        } while (predictedLabel === actualLabel);
+        confidence = (Math.random() * 30 + 50).toFixed(2); // 50-80% 신뢰도
+    }
+
+    const resultText = `AI의 추측: ${predictedLabel} (확률: ${confidence}%)`;
+    const correctnessText = predictedLabel === actualLabel ? 
+        "정확합니다!" : `오답입니다. 실제 꽃은 ${actualLabel}입니다.`;
+    const descriptionText = `선택한 이미지: ${description}`;
+
+    document.getElementById('classificationResult').innerHTML = `${resultText}<br>${correctnessText}<br>${descriptionText}`;
+    updatePoints(3);
+}
+
+// 페이지 로드 시 이미지 분류 시뮬레이션 설정
+window.onload = function() {
+    setupImageClassification();
+    // 다른 초기화 함수들...
+};
+
+// 아스키 아트 표정들
+const asciiExpressions = [
+    `
+   (^_^)
+  //   \\\\
+ (( O O ))
+  \\  ~  /
+   \\___/
+    `,
+    `
+   (o_o)
+  /|   |\\
+ ( \\   / )
+   \\_O_/
+    `,
+    `
+   (^o^)
+  <(   )>
+   /   \\
+  /     \\
+ /       \\
+    `,
+    `
+   (>_<)
+  //   \\\\
+ ((  -  ))
+  \\\\___//
+   `,
+    `
+    (*_*)
+   /(   )\\
+  |  (O)  |
+   \\  ~  /
+    \\___/
+    `
+];
+
+let chatHistory = [];
+
+function sendMessage() {
+    const userInput = document.getElementById('userInput').value;
+    if (userInput.trim() === '') return;
+
+    // 사용자 메시지 추가
+    addToChatHistory('User', userInput);
+
+    // 챗봇 응답 생성
+    const botResponse = generateBotResponse(userInput);
+    addToChatHistory('Bot', botResponse);
+
+    // 입력 필드 초기화
+    document.getElementById('userInput').value = '';
+
+    // 채팅 기록 업데이트
+    updateChatDisplay();
+
+    // 포인트 업데이트
+    updatePoints(1);
+}
+
+function generateBotResponse(userInput) {
+    // 랜덤하게 표정 선택
+    const randomExpression = asciiExpressions[Math.floor(Math.random() * asciiExpressions.length)];
+    return `Here's my reaction:\n${randomExpression}\n(랜덤 반응입니다)`;
+}
+
+function addToChatHistory(sender, message) {
+    chatHistory.push({ sender, message });
+    if (chatHistory.length > 5) chatHistory.shift(); // 최근 5개 메시지만 유지
+}
+
+function updateChatDisplay() {
+    const chatbox = document.getElementById('chatbox');
+    chatbox.innerHTML = chatHistory.map(entry => 
+        `<p><strong>${entry.sender}:</strong> ${entry.message.replace(/\n/g, '<br>')}</p>`
+    ).join('');
+    chatbox.scrollTop = chatbox.scrollHeight; // 스크롤을 항상 아래로
+}
+
+// 엔터 키로 메시지 전송
+document.getElementById('userInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+// 초기 메시지 표시
+window.onload = function() {
+    addToChatHistory('Bot', '안녕하세요! 저는 아스키 아트 챗봇입니다. 무엇을 도와드릴까요?');
+    updateChatDisplay();
+    // 다른 초기화 함수들...
+};
+
+
+
 // 음성 인식 시뮬레이션
 function startVoiceRecognition() {
     const result = document.getElementById('voiceResult');
