@@ -221,17 +221,22 @@ function setupImageClassification() {
     img.alt = 'TensorFlow Image Classification Example';
     img.style.maxWidth = '100%';
     img.style.height = 'auto';
-    imageContainer.appendChild(img);
+    
+    img.onerror = function() {
+        imageContainer.textContent = '이미지를 불러오는 데 실패했습니다.';
+    };
 
-    img.onclick = function() {
-        const possibleClasses = ['선인장', '꽃', '나무', '산'];
-        const randomClass = possibleClasses[Math.floor(Math.random() * possibleClasses.length)];
-        const confidence = (Math.random() * 30 + 70).toFixed(2);
-        document.getElementById('classificationResult').textContent = `AI의 추측: ${randomClass} (확률: ${confidence}%)`;
-        updatePoints(3);
+    img.onload = function() {
+        imageContainer.appendChild(img);
+        img.onclick = function() {
+            const possibleClasses = ['선인장', '꽃', '나무', '산'];
+            const randomClass = possibleClasses[Math.floor(Math.random() * possibleClasses.length)];
+            const confidence = (Math.random() * 30 + 70).toFixed(2);
+            document.getElementById('classificationResult').textContent = `AI의 추측: ${randomClass} (확률: ${confidence}%)`;
+            updatePoints(3);
+        };
     };
 }
-
 // 음성 인식 시뮬레이션
 function startVoiceRecognition() {
     const result = document.getElementById('voiceResult');
