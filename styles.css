@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Comic+Neue:wght@300;400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 body {
     font-family: 'Comic Neue', cursive;
@@ -109,21 +109,61 @@ input[type="number"], input[type="text"], select {
 }
 
 #chatbox {
-    height: 200px;
-    border: 2px solid #4ECDC4;
-    border-radius: 15px;
+    font-family: 'Press Start 2P', cursive;
+    height: 400px;
     overflow-y: scroll;
+    border: 2px solid #4ECDC4;
     padding: 15px;
     margin-bottom: 15px;
     background-color: #F7FFF7;
+    border-radius: 10px;
+}
+
+.chat-message {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 8px;
+    max-width: 80%;
+}
+
+.user-message {
+    background-color: #E0F7FA;
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.bot-message {
+    background-color: #FFF9C4;
+    align-self: flex-start;
+}
+
+.chat-message pre {
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 #userInput {
-    width: calc(100% - 100px);
+    width: calc(100% - 110px);
     padding: 10px;
-    border-radius: 25px;
+    margin-right: 10px;
     border: 2px solid #4ECDC4;
-    font-family: 'Comic Neue', cursive;
+    border-radius: 5px;
+    font-family: 'Press Start 2P', cursive;
+}
+
+#chatbot button {
+    padding: 10px 20px;
+    background-color: #4ECDC4;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Press Start 2P', cursive;
+}
+
+#chatbot button:hover {
+    background-color: #45b7a7;
 }
 
 #sortingVisualization {

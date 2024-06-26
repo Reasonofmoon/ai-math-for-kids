@@ -281,6 +281,7 @@ window.onload = function() {
 };
 
 // 아스키 아트 표정들
+// 아스키 아트 표정들
 const asciiExpressions = [
     `
    (^_^)
@@ -327,7 +328,7 @@ function sendMessage() {
     addToChatHistory('User', userInput);
 
     // 챗봇 응답 생성
-    const botResponse = generateBotResponse(userInput);
+    const botResponse = generateBotResponse();
     addToChatHistory('Bot', botResponse);
 
     // 입력 필드 초기화
@@ -340,10 +341,10 @@ function sendMessage() {
     updatePoints(1);
 }
 
-function generateBotResponse(userInput) {
+function generateBotResponse() {
     // 랜덤하게 표정 선택
     const randomExpression = asciiExpressions[Math.floor(Math.random() * asciiExpressions.length)];
-    return `Here's my reaction:\n${randomExpression}\n(랜덤 반응입니다)`;
+    return randomExpression;
 }
 
 function addToChatHistory(sender, message) {
@@ -354,10 +355,24 @@ function addToChatHistory(sender, message) {
 function updateChatDisplay() {
     const chatbox = document.getElementById('chatbox');
     chatbox.innerHTML = chatHistory.map(entry => 
-        `<p><strong>${entry.sender}:</strong> ${entry.message.replace(/\n/g, '<br>')}</p>`
+        `<p class="chat-message ${entry.sender.toLowerCase()}-message"><strong>${entry.sender}:</strong><br><pre>${entry.message}</pre></p>`
     ).join('');
     chatbox.scrollTop = chatbox.scrollHeight; // 스크롤을 항상 아래로
 }
+
+// 엔터 키로 메시지 전송
+document.getElementById('userInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage();
+    }
+});
+
+// 초기 메시지 표시
+window.onload = function() {
+    addToChatHistory('Bot', '안녕하세요! 저는 아스키 아트 챗봇입니다. 메시지를 보내면 표정으로 반응할게요!');
+    updateChatDisplay();
+    // 다른 초기화 함수들...
+};
 
 // 엔터 키로 메시지 전송
 document.getElementById('userInput').addEventListener('keypress', function(e) {
