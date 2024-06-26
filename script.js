@@ -171,6 +171,67 @@ function drawRegressionLine() {
     updatePoints(3);
 }
 
+// 신경망 시각화
+function drawNeuralNetwork() {
+    const canvas = document.getElementById('networkCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const layers = [3, 4, 4, 2];
+    const layerDistance = canvas.width / (layers.length + 1);
+    const nodeRadius = 15;
+
+    // 노드 그리기
+    for (let i = 0; i < layers.length; i++) {
+        for (let j = 0; j < layers[i]; j++) {
+            const x = (i + 1) * layerDistance;
+            const y = (canvas.height / (layers[i] + 1)) * (j + 1);
+            ctx.beginPath();
+            ctx.arc(x, y, nodeRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.stroke();
+        }
+    }
+
+    // 연결선 그리기
+    for (let i = 0; i < layers.length - 1; i++) {
+        for (let j = 0; j < layers[i]; j++) {
+            for (let k = 0; k < layers[i + 1]; k++) {
+                const x1 = (i + 1) * layerDistance;
+                const y1 = (canvas.height / (layers[i] + 1)) * (j + 1);
+                const x2 = (i + 2) * layerDistance;
+                const y2 = (canvas.height / (layers[i + 1] + 1)) * (k + 1);
+                ctx.beginPath();
+                ctx.moveTo(x1 + nodeRadius, y1);
+                ctx.lineTo(x2 - nodeRadius, y2);
+                ctx.stroke();
+            }
+        }
+    }
+
+    updatePoints(2);
+}
+
+// 이미지 분류 시뮬레이션
+function setupImageClassification() {
+    const imageContainer = document.getElementById('imageContainer');
+    const img = document.createElement('img');
+    img.src = 'https://www.tensorflow.org/static/tutorials/images/classification_files/output_wBmEA9c0JYes_0.png?hl=ko';
+    img.alt = 'TensorFlow Image Classification Example';
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    imageContainer.appendChild(img);
+
+    img.onclick = function() {
+        const possibleClasses = ['선인장', '꽃', '나무', '산'];
+        const randomClass = possibleClasses[Math.floor(Math.random() * possibleClasses.length)];
+        const confidence = (Math.random() * 30 + 70).toFixed(2);
+        document.getElementById('classificationResult').textContent = `AI의 추측: ${randomClass} (확률: ${confidence}%)`;
+        updatePoints(3);
+    };
+}
+
 // 음성 인식 시뮬레이션
 function startVoiceRecognition() {
     const result = document.getElementById('voiceResult');
@@ -190,6 +251,38 @@ function startVoiceRecognition() {
     }, 2000);
 }
 
+// 데이터 정렬 시각화
+let sortingArray = [];
+
+function generateRandomData() {
+    sortingArray = Array.from({length: 10}, () => Math.floor(Math.random() * 100) + 1);
+    visualizeSortingArray();
+}
+
+function visualizeSortingArray() {
+    const container = document.getElementById('sortingVisualization');
+    container.innerHTML = '';
+    sortingArray.forEach(value => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = `${value * 2}px`;
+        container.appendChild(bar);
+    });
+}
+
+async function startSorting() {
+    for (let i = 0; i < sortingArray.length; i++) {
+        for (let j = 0; j < sortingArray.length - i - 1; j++) {
+            if (sortingArray[j] > sortingArray[j + 1]) {
+                [sortingArray[j], sortingArray[j + 1]] = [sortingArray[j + 1], sortingArray[j]];
+                visualizeSortingArray();
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+    }
+    updatePoints(5);
+}
+
 // 유전 알고리즘 시뮬레이션
 let targetString = "Hello, World!";
 let populationSize = 100;
@@ -199,44 +292,38 @@ function startGeneticAlgorithm() {
     document.getElementById('targetString').textContent = targetString;
     let population = initializePopulation();
     let generation = 0;
-    document.getElementById('startGAButton').textContent = '멈추기';
-    document.getElementById('startGAButton').onclick = stopGeneticAlgorithm;
+    const gaResultElement = document.getElementById('gaResult');
 
     gaInterval = setInterval(() => {
         population = evolve(population);
         const bestIndividual = population[0];
-        document.getElementById('gaResult').textContent = 
-            `세대: ${generation}, 최적 해: ${bestIndividual}`;
+        gaResultElement.innerHTML = `
+            세대: ${generation}<br>
+            최적 해: ${bestIndividual}<br>
+            적합도: ${calculateFitness(bestIndividual)}/${targetString.length}
+        `;
         if (bestIndividual === targetString) {
-            stopGeneticAlgorithm();
+            clearInterval(gaInterval);
+            gaResultElement.innerHTML += '<br>목표 달성!';
             updatePoints(10);
         }
         generation++;
     }, 100);
 }
 
-function stopGeneticAlgorithm() {
-    clearInterval(gaInterval);
-    document.getElementById('startGAButton').textContent = '시뮬레이션 시작';
-    document.getElementById('startGAButton').onclick = startGeneticAlgorithm;
-}
-
 function initializePopulation() {
     return Array.from({length: populationSize}, () => 
         Array.from({length: targetString.length}, () => 
-            String.fromCharCode(Math.floor(Math.random() * 256))
+            String.fromCharCode(Math.floor(Math.random() * 95) + 32)
         ).join('')
     );
 }
 
+function calculateFitness(individual) {
+    return individual.split('').filter((char, i) => char === targetString[i]).length;
+}
+
 function evolve(population) {
-    const fitness = population.map(individual => 
-        individual.split('').filter((char, i) => char === targetString[i]).length
-    );
-    population = population.map((individual, i) => ({individual, fitness: fitness[i]}))
-        .sort((a, b) => b.fitness - a.fitness)
-        .map(({individual}) => individual);
-    
     const newPopulation = [];
     while (newPopulation.length < populationSize) {
         const parent1 = selectParent(population);
@@ -245,11 +332,17 @@ function evolve(population) {
         child = mutate(child);
         newPopulation.push(child);
     }
-    return newPopulation;
+    return newPopulation.sort((a, b) => calculateFitness(b) - calculateFitness(a));
 }
 
 function selectParent(population) {
-    return population[Math.floor(Math.random() * population.length / 2)];
+    const tournamentSize = 5;
+    const tournament = Array.from({length: tournamentSize}, () => 
+        population[Math.floor(Math.random() * population.length)]
+    );
+    return tournament.reduce((best, current) => 
+        calculateFitness(current) > calculateFitness(best) ? current : best
+    );
 }
 
 function crossover(parent1, parent2) {
@@ -259,7 +352,7 @@ function crossover(parent1, parent2) {
 
 function mutate(individual) {
     return individual.split('').map(char => 
-        Math.random() < mutationRate ? String.fromCharCode(Math.floor(Math.random() * 256)) : char
+        Math.random() < mutationRate ? String.fromCharCode(Math.floor(Math.random() * 95) + 32) : char
     ).join('');
 }
 
@@ -279,6 +372,7 @@ function setupPuzzle() {
     });
     updatePuzzleDisplay();
 }
+
 
 function shufflePuzzle() {
     puzzleState = [1, 2, 3, 4, 5, 6, 7, 8, 0].sort(() => Math.random() - 0.5);
@@ -328,6 +422,8 @@ function initializeAll() {
     setupPuzzle();
     document.getElementById('startVoiceRecognition').onclick = startVoiceRecognition;
     document.getElementById('startGAButton').onclick = startGeneticAlgorithm;
+    setupImageClassification();
+    generateRandomData();
 }
 
 // 페이지 로드 시 모든 기능 초기화
