@@ -280,114 +280,85 @@ window.onload = function() {
     // 다른 초기화 함수들...
 };
 
-// 아스키 아트 표정들
-// 아스키 아트 표정들
+const responses = {
+    "안녕": ["안녕하세요!", "반가워요!", "어서오세요!"],
+    "이름": ["제 이름은 AI 친구예요.", "저는 AI 친구라고 해요.", "AI 친구라고 불러주세요!"],
+    "날씨": ["오늘 날씨가 좋네요!", "날씨 앱을 한번 확인해보는 건 어떨까요?", "밖에 나가기 좋은 날씨예요!"],
+    "공부": ["열심히 공부하는 당신이 자랑스러워요!", "공부할 때는 집중력이 중요해요.", "조금씩 꾸준히 하는 게 비결이에요!"],
+    "게임": ["게임도 적당히 즐기는 게 좋아요.", "새로운 게임을 배워보는 건 어떨까요?", "친구들과 함께 게임하면 더 재밌어요!"],
+    "AI": ["AI는 정말 흥미로운 주제예요!", "AI에 대해 더 알고 싶으신가요?", "AI는 우리의 미래를 바꿀 거예요."],
+    "음식": ["맛있는 음식은 행복의 비결이에요!", "오늘은 어떤 음식을 드셨나요?", "건강한 음식을 먹는 것이 중요해요."],
+    "운동": ["운동은 건강에 정말 좋아요!", "가벼운 스트레칭부터 시작해보는 건 어떨까요?", "규칙적인 운동은 집중력 향상에도 도움이 돼요."],
+    "책": ["책 읽는 것을 좋아하시나요?", "좋은 책을 읽으면 지식이 늘어나요.", "어떤 장르의 책을 좋아하세요?"],
+    "친구": ["친구와 잘 지내고 있나요?", "좋은 친구는 인생의 보물이에요.", "새로운 친구를 사귀는 것도 좋은 경험이 될 거예요."]
+};
+
+const defaultResponses = [
+    "흥미로운 이야기네요! 더 자세히 말씀해 주세요.",
+    "그렇군요. 다른 이야기도 들려주세요!",
+    "제가 잘 이해하지 못했어요. 다르게 설명해 주실 수 있나요?",
+    "새로운 것을 배웠어요! 감사합니다.",
+    "정말 재미있는 주제예요!"
+];
+
 const asciiExpressions = [
-    `
-   (^_^)
-  //   \\\\
- (( O O ))
-  \\  ~  /
-   \\___/
-    `,
-    `
-   (o_o)
-  /|   |\\
- ( \\   / )
-   \\_O_/
-    `,
-    `
-   (^o^)
-  <(   )>
-   /   \\
-  /     \\
- /       \\
-    `,
-    `
-   (>_<)
-  //   \\\\
- ((  -  ))
-  \\\\___//
-   `,
-    `
-    (*_*)
-   /(   )\\
-  |  (O)  |
-   \\  ~  /
-    \\___/
-    `
+    "(^_^)", "(o_o)", "(^o^)", "(>_<)", "(*_*)"
 ];
 
 let chatHistory = [];
 
 function sendMessage() {
-    const userInput = document.getElementById('userInput').value;
-    if (userInput.trim() === '') return;
+    const userInput = document.getElementById('userInput').value.trim();
+    if (userInput === '') return;
 
-    // 사용자 메시지 추가
     addToChatHistory('User', userInput);
 
-    // 챗봇 응답 생성
-    const botResponse = generateBotResponse();
+    const botResponse = generateResponse(userInput);
     addToChatHistory('Bot', botResponse);
 
-    // 입력 필드 초기화
     document.getElementById('userInput').value = '';
-
-    // 채팅 기록 업데이트
     updateChatDisplay();
-
-    // 포인트 업데이트
     updatePoints(1);
 }
 
-function generateBotResponse() {
-    // 랜덤하게 표정 선택
-    const randomExpression = asciiExpressions[Math.floor(Math.random() * asciiExpressions.length)];
-    return randomExpression;
+function generateResponse(input) {
+    const lowercaseInput = input.toLowerCase();
+    let response = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+
+    for (const [keyword, possibleResponses] of Object.entries(responses)) {
+        if (lowercaseInput.includes(keyword)) {
+            response = possibleResponses[Math.floor(Math.random() * possibleResponses.length)];
+            break;
+        }
+    }
+
+    const asciiExpression = asciiExpressions[Math.floor(Math.random() * asciiExpressions.length)];
+    return `${response}\n${asciiExpression}`;
 }
 
 function addToChatHistory(sender, message) {
     chatHistory.push({ sender, message });
-    if (chatHistory.length > 5) chatHistory.shift(); // 최근 5개 메시지만 유지
+    if (chatHistory.length > 5) chatHistory.shift();
 }
 
 function updateChatDisplay() {
     const chatbox = document.getElementById('chatbox');
     chatbox.innerHTML = chatHistory.map(entry => 
-        `<p class="chat-message ${entry.sender.toLowerCase()}-message"><strong>${entry.sender}:</strong><br><pre>${entry.message}</pre></p>`
+        `<p class="chat-message ${entry.sender.toLowerCase()}-message"><strong>${entry.sender}:</strong> ${entry.message.replace('\n', '<br>')}</p>`
     ).join('');
-    chatbox.scrollTop = chatbox.scrollHeight; // 스크롤을 항상 아래로
+    chatbox.scrollTop = chatbox.scrollHeight;
 }
 
-// 엔터 키로 메시지 전송
 document.getElementById('userInput').addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         sendMessage();
     }
 });
 
-// 초기 메시지 표시
 window.onload = function() {
-    addToChatHistory('Bot', '안녕하세요! 저는 아스키 아트 챗봇입니다. 메시지를 보내면 표정으로 반응할게요!');
+    addToChatHistory('Bot', '안녕하세요! 저는 AI 친구예요. 무엇을 도와드릴까요?\n(^_^)');
     updateChatDisplay();
-    // 다른 초기화 함수들...
 };
-
-// 엔터 키로 메시지 전송
-document.getElementById('userInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-});
-
-// 초기 메시지 표시
-window.onload = function() {
-    addToChatHistory('Bot', '안녕하세요! 저는 아스키 아트 챗봇입니다. 무엇을 도와드릴까요?');
-    updateChatDisplay();
-    // 다른 초기화 함수들...
-};
-
 
 
 // 음성 인식 시뮬레이션
