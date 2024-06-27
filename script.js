@@ -100,7 +100,6 @@ function checkPattern() {
     }
 }
 
-// 선형 회귀 초기화 함수
 function initScatterPlot() {
     const ctx = document.getElementById('scatterPlot').getContext('2d');
     scatterChart = new Chart(ctx, {
@@ -137,8 +136,9 @@ function initScatterPlot() {
     });
 }
 
-// 회귀선 그리기 함수
 function drawRegressionLine() {
+    if (scatterData.length < 2) return;
+
     const n = scatterData.length;
     const sumX = scatterData.reduce((sum, point) => sum + point.x, 0);
     const sumY = scatterData.reduce((sum, point) => sum + point.y, 0);
@@ -169,7 +169,6 @@ function drawRegressionLine() {
 
     scatterChart.update();
 }
-
 // 신경망 그리기 함수
 function drawNeuralNetwork() {
     const canvas = document.getElementById('networkCanvas');
@@ -214,7 +213,6 @@ function drawNeuralNetwork() {
     canvas.onclick = activateNetwork;
     updatePoints(2);
 }
-
 // 신경망 활성화 함수
 function activateNetwork(event) {
     const canvas = document.getElementById('networkCanvas');
@@ -495,7 +493,7 @@ function stopSorting() {
 }
 
 function changeSortingSpeed(speed) {
-    sortingSpeed = parseInt(speed);
+    sortingSpeed = 1000 - parseInt(speed);  // 속도 반전
     if (sortingInterval) {
         stopSorting();
         startSorting();
@@ -503,30 +501,10 @@ function changeSortingSpeed(speed) {
 }
 
 // 유전 알고리즘
-const TARGET = "Hello, World!";
-const POPULATION_SIZE = 100;
+
+const TARGET = "Hello, AI!";  // 목표 문자열 길이 축소
+const POPULATION_SIZE = 50;   // 인구 크기 축소
 const MUTATION_RATE = 0.01;
-
-function generateRandomString(length) {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ,.!";
-    return Array(length).fill().map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
-
-function calculateFitness(str) {
-    return [...str].reduce((acc, char, i) => acc + (char === TARGET[i] ? 1 : 0), 0);
-}
-
-function crossover(parent1, parent2) {
-    const midpoint = Math.floor(parent1.length / 2);
-    return parent1.slice(0, midpoint) + parent2.slice(midpoint);
-}
-
-function mutate(str) {
-    return [...str].map(char => 
-        Math.random() < MUTATION_RATE ? 
-            String.fromCharCode(Math.floor(Math.random() * 256)) : char
-    ).join('');
-}
 
 function startGeneticAlgorithm() {
     document.getElementById('targetString').textContent = TARGET;
@@ -552,8 +530,8 @@ function startGeneticAlgorithm() {
 
         const newPopulation = [];
         for (let i = 0; i < POPULATION_SIZE; i++) {
-            const parent1 = population[Math.floor(Math.random() * POPULATION_SIZE)];
-            const parent2 = population[Math.floor(Math.random() * POPULATION_SIZE)];
+            const parent1 = selectParent(population, fitnesses);
+            const parent2 = selectParent(population, fitnesses);
             let child = crossover(parent1, parent2);
             child = mutate(child);
             newPopulation.push(child);
@@ -563,6 +541,33 @@ function startGeneticAlgorithm() {
         generation++;
     }, 100);
 }
+
+function selectParent(population, fitnesses) {
+    const totalFitness = fitnesses.reduce((a, b) => a + b, 0);
+    let pick = Math.random() * totalFitness;
+    let current = 0;
+    for (let i = 0; i < population.length; i++) {
+        current += fitnesses[i];
+        if (current > pick) {
+            return population[i];
+        }
+    }
+    return population[population.length - 1];
+}
+
+// 초기화 함수 수정
+function initializeAll() {
+    drawChart();
+    generatePattern();
+    initScatterPlot();
+    drawNeuralNetwork();
+    generateRandomData();
+    document.getElementById('sortingSpeedSlider').value = 500;  // 초기 속도 설정
+    // 기타 초기화 함수들...
+}
+
+// 페이지 로드 시 모든 기능 초기화
+window.addEventListener('DOMContentLoaded', initializeAll);
 
 // 퍼즐 게임
 function setupPuzzle() {
