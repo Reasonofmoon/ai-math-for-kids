@@ -172,14 +172,19 @@ function drawRegressionLine() {
 }
 
 // 신경망 시각화
+
+let networkNodes = [];
+const layers = [3, 4, 4, 2];
+
 function drawNeuralNetwork() {
     const canvas = document.getElementById('networkCanvas');
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    const layers = [3, 4, 4, 2];
     const layerDistance = canvas.width / (layers.length + 1);
     const nodeRadius = 15;
+
+    networkNodes = [];
 
     // 노드 그리기
     for (let i = 0; i < layers.length; i++) {
@@ -191,6 +196,7 @@ function drawNeuralNetwork() {
             ctx.fillStyle = 'white';
             ctx.fill();
             ctx.stroke();
+            networkNodes.push({x, y, layer: i, index: j, activated: false});
         }
     }
 
@@ -210,7 +216,79 @@ function drawNeuralNetwork() {
         }
     }
 
-    updatePoints(2);
+    canvas.onclick = activateNode;
+}
+
+function activateNode(event) {
+    const canvas = document.getElementById('networkCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    for (let node of networkNodes) {
+        const distance = Math.sqrt((x - node.x)**2 + (y - node.y)**2);
+        if (distance <= 15) {
+            node.activated = true;
+            propagateActivation(node.layer, node.index);
+            drawActivatedNetwork();
+            break;
+        }
+    }
+}
+
+function propagateActivation(layer, index) {
+    if (layer >= layers.length - 1) return;
+
+    for (let i = 0; i < layers[layer + 1]; i++) {
+        const nextNode = networkNodes.find(n => n.layer === layer + 1 && n.index === i);
+        if (nextNode) {
+            nextNode.activated = true;
+            propagateActivation(layer + 1, i);
+        }
+    }
+}
+
+function drawActivatedNetwork() {
+    const canvas = document.getElementById('networkCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const layerDistance = canvas.width / (layers.length + 1);
+    const nodeRadius = 15;
+
+    // 연결선 그리기
+    for (let i = 0; i < layers.length - 1; i++) {
+        for (let j = 0; j < layers[i]; j++) {
+            for (let k = 0; k < layers[i + 1]; k++) {
+                const node1 = networkNodes.find(n => n.layer === i && n.index === j);
+                const node2 = networkNodes.find(n => n.layer === i + 1 && n.index === k);
+                if (node1 && node2) {
+                    ctx.beginPath();
+                    ctx.moveTo(node1.x + nodeRadius, node1.y);
+                    ctx.lineTo(node2.x - nodeRadius, node2.y);
+                    ctx.strokeStyle = node1.activated && node2.activated ? 'red' : 'black';
+                    ctx.lineWidth = node1.activated && node2.activated ? 2 : 1;
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    // 노드 그리기
+    for (let node of networkNodes) {
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI);
+        ctx.fillStyle = node.activated ? 'red' : 'white';
+        ctx.fill();
+        ctx.stroke();
+    }
+}
+
+// 초기화 함수에 추가
+function initializeAll() {
+    // ... 기존 코드 ...
+    drawNeuralNetwork();
+    // ... 기존 코드 ...
 }
 // 이미지 분류 시뮬레이션
 
@@ -266,18 +344,11 @@ function classifyImage(actualLabel, description) {
     updatePoints(predictedLabel === actualLabel ? 1 : 0);
 }
 
-function updatePoints(points) {
-    const pointsElement = document.getElementById('points');
-    if (pointsElement) {
-        let currentPoints = parseInt(pointsElement.textContent) || 0;
-        pointsElement.textContent = currentPoints + points;
-    }
-}
-
-// 초기화 함수
+// 초기화 함수에 추가
 function initializeAll() {
+    // ... 기존 코드 ...
     setupImageClassification();
-    // 다른 초기화 함수들...
+    // ... 기존 코드 ...
 }
 
 // 페이지 로드 시 초기화
@@ -400,40 +471,72 @@ function startVoiceRecognition() {
     }, 2000);
 }
 
-// 데이터 정렬 시각화
-let sortingArray = [];
+const TARGET = "Hello, World!";
+const POPULATION_SIZE = 100;
+const MUTATION_RATE = 0.01;
 
-function generateRandomData() {
-    sortingArray = Array.from({length: 10}, () => Math.floor(Math.random() * 100) + 1);
-    visualizeSortingArray();
+function generateRandomString(length) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ,.!";
+    return Array(length).fill().map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
 
-function visualizeSortingArray() {
-    const container = document.getElementById('sortingVisualization');
-    container.innerHTML = '';
-    sortingArray.forEach(value => {
-        const bar = document.createElement('div');
-        bar.className = 'bar';
-        bar.style.height = `${value * 2}px`;
-        container.appendChild(bar);
-    });
+function calculateFitness(str) {
+    return [...str].reduce((acc, char, i) => acc + (char === TARGET[i] ? 1 : 0), 0);
 }
 
-async function startSorting() {
-    for (let i = 0; i < sortingArray.length; i++) {
-        for (let j = 0; j < sortingArray.length - i - 1; j++) {
-            if (sortingArray[j] > sortingArray[j + 1]) {
-                [sortingArray[j], sortingArray[j + 1]] = [sortingArray[j + 1], sortingArray[j]];
-                visualizeSortingArray();
-                await new Promise(resolve => setTimeout(resolve, 100));
-            }
-        }
-    }
-    updatePoints(5);
-}
 function crossover(parent1, parent2) {
-  const midpoint = Math.floor(parent1.length / 2);
-  return parent1.slice(0, midpoint) + parent2.slice(midpoint);
+    const midpoint = Math.floor(parent1.length / 2);
+    return parent1.slice(0, midpoint) + parent2.slice(midpoint);
+}
+
+function mutate(str) {
+    return [...str].map(char => 
+        Math.random() < MUTATION_RATE ? 
+            String.fromCharCode(Math.floor(Math.random() * 256)) : char
+    ).join('');
+}
+
+function startGeneticAlgorithm() {
+    document.getElementById('targetString').textContent = TARGET;
+    let population = Array(POPULATION_SIZE).fill().map(() => generateRandomString(TARGET.length));
+    let generation = 0;
+
+    const intervalId = setInterval(() => {
+        const fitnesses = population.map(calculateFitness);
+        const maxFitness = Math.max(...fitnesses);
+        const bestString = population[fitnesses.indexOf(maxFitness)];
+
+        document.getElementById('gaResult').innerHTML = `
+            세대: ${generation}<br>
+            최고 적합도: ${maxFitness}/${TARGET.length}<br>
+            최고 문자열: ${bestString}
+        `;
+
+        if (maxFitness === TARGET.length) {
+            clearInterval(intervalId);
+            updatePoints(10);
+            return;
+        }
+
+        const newPopulation = [];
+        for (let i = 0; i < POPULATION_SIZE; i++) {
+            const parent1 = population[Math.floor(Math.random() * POPULATION_SIZE)];
+            const parent2 = population[Math.floor(Math.random() * POPULATION_SIZE)];
+            let child = crossover(parent1, parent2);
+            child = mutate(child);
+            newPopulation.push(child);
+        }
+
+        population = newPopulation;
+        generation++;
+    }, 100);
+}
+
+// 초기화 함수에 추가
+function initializeAll() {
+    // ... 기존 코드 ...
+    document.getElementById('startGAButton').onclick = startGeneticAlgorithm;
+    // ... 기존 코드 ...
 }
 
 
