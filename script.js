@@ -213,6 +213,7 @@ function drawNeuralNetwork() {
     updatePoints(2);
 }
 // 이미지 분류 시뮬레이션
+
 const imageData = [
     { src: "images/roses_vintage.jpg", label: "roses", description: "빈티지 스타일의 장미 이미지" },
     { src: "images/dandelion_field.jpg", label: "dandelion", description: "민들레 들판" },
@@ -234,15 +235,9 @@ function setupImageClassification() {
         imgElement.src = image.src;
         imgElement.alt = image.description;
         imgElement.title = image.description; // 마우스 오버시 설명 표시
-        imgElement.style.width = '150px';
-        imgElement.style.height = '150px';
-        imgElement.style.objectFit = 'cover';
-        imgElement.style.margin = '5px';
-        imgElement.style.cursor = 'pointer';
+        imgElement.classList.add('classification-image');
 
-        imgElement.onclick = function() {
-            classifyImage(image.label, image.description);
-        };
+        imgElement.onclick = () => classifyImage(image.label, image.description);
 
         imageContainer.appendChild(imgElement);
     });
@@ -268,20 +263,42 @@ function classifyImage(actualLabel, description) {
     const descriptionText = `선택한 이미지: ${description}`;
 
     document.getElementById('classificationResult').innerHTML = `${resultText}<br>${correctnessText}<br>${descriptionText}`;
-    updatePoints(3);
+    updatePoints(predictedLabel === actualLabel ? 1 : 0);
+}
+
+function updatePoints(points) {
+    const pointsElement = document.getElementById('points');
+    if (pointsElement) {
+        let currentPoints = parseInt(pointsElement.textContent) || 0;
+        pointsElement.textContent = currentPoints + points;
+    }
 }
 
 // 초기화 함수
 function initializeAll() {
-    drawChart();
-    generatePattern();
-    initScatterPlot();
     setupImageClassification();
     // 다른 초기화 함수들...
 }
 
-// 페이지 로드 시 모든 기능 초기화
-window.onload = initializeAll;
+// 페이지 로드 시 초기화
+window.addEventListener('DOMContentLoaded', initializeAll);
+
+// CSS 스타일
+const style = document.createElement('style');
+style.textContent = `
+    .classification-image {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        margin: 5px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .classification-image:hover {
+        transform: scale(1.1);
+    }
+`;
+document.head.appendChild(style);
 
 const responses = {
     "안녕": ["안녕하세요!", "반가워요!", "어서오세요!"],
