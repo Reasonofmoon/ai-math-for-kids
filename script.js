@@ -4,6 +4,13 @@ let currentPattern = [];
 let currentPatternAnswer;
 const scatterData = [];
 let gaInterval;
+let sortingArray = [];
+let sortingInterval;
+let sortingSpeed = 50;
+let puzzleState = [1, 2, 3, 4, 5, 6, 7, 8, 0];
+let moveCount = 0;
+let networkNodes = [];
+const layers = [3, 4, 4, 2];
 
 function updatePoints(amount) {
     points += amount;
@@ -133,91 +140,56 @@ function initScatterPlot() {
         }
     });
 }
+    scatterData: [
+      { x: 1, y: 2 },
+      { x: 2, y: 3 },
+      { x: 3, y: 4 },
+      { x: 4, y: 5 },
+      { x: 5, y: 6 },
+    ],
+      // 신경망 시각화
+      function drawNeuralNetwork() {
+        const canvas = document.getElementById("networkCanvas");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-function drawRegressionLine() {
-    if (scatterData.length < 2) {
-        alert('점을 최소 2개 이상 찍어주세요.');
-        return;
-    }
+        const layerDistance = canvas.width / (layers.length + 1);
+        const nodeRadius = 15;
 
-    const n = scatterData.length;
-    let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-    for (let point of scatterData) {
-        sumX += point.x;
-        sumY += point.y;
-        sumXY += point.x * point.y;
-        sumX2 += point.x * point.x;
-    }
+        networkNodes = [];
 
-    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-    const intercept = (sumY - slope * sumX) / n;
-
-    const minX = Math.min(...scatterData.map(p => p.x));
-    const maxX = Math.max(...scatterData.map(p => p.x));
-
-    scatterChart.data.datasets.push({
-        type: 'line',
-        label: '회귀선',
-        data: [
-            {x: minX, y: slope * minX + intercept},
-            {x: maxX, y: slope * maxX + intercept}
-        ],
-        borderColor: 'rgb(75, 192, 192)',
-        borderWidth: 2,
-        fill: false
-    });
-
-    scatterChart.update();
-    updatePoints(3);
-}
-
-// 신경망 시각화
-
-let networkNodes = [];
-const layers = [3, 4, 4, 2];
-
-function drawNeuralNetwork() {
-    const canvas = document.getElementById('networkCanvas');
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const layerDistance = canvas.width / (layers.length + 1);
-    const nodeRadius = 15;
-
-    networkNodes = [];
-
-    // 노드 그리기
-    for (let i = 0; i < layers.length; i++) {
-        for (let j = 0; j < layers[i]; j++) {
+        // 노드 그리기
+        for (let i = 0; i < layers.length; i++) {
+          for (let j = 0; j < layers[i]; j++) {
             const x = (i + 1) * layerDistance;
             const y = (canvas.height / (layers[i] + 1)) * (j + 1);
             ctx.beginPath();
             ctx.arc(x, y, nodeRadius, 0, 2 * Math.PI);
-            ctx.fillStyle = 'white';
+            ctx.fillStyle = "white";
             ctx.fill();
             ctx.stroke();
-            networkNodes.push({x, y, layer: i, index: j, activated: false});
+            networkNodes.push({ x, y, layer: i, index: j, activated: false });
+          }
         }
-    }
 
-    // 연결선 그리기
-    for (let i = 0; i < layers.length - 1; i++) {
-        for (let j = 0; j < layers[i]; j++) {
+        // 연결선 그리기
+        for (let i = 0; i < layers.length - 1; i++) {
+          for (let j = 0; j < layers[i]; j++) {
             for (let k = 0; k < layers[i + 1]; k++) {
-                const x1 = (i + 1) * layerDistance;
-                const y1 = (canvas.height / (layers[i] + 1)) * (j + 1);
-                const x2 = (i + 2) * layerDistance;
-                const y2 = (canvas.height / (layers[i + 1] + 1)) * (k + 1);
-                ctx.beginPath();
-                ctx.moveTo(x1 + nodeRadius, y1);
-                ctx.lineTo(x2 - nodeRadius, y2);
-                ctx.stroke();
+              const x1 = (i + 1) * layerDistance;
+              const y1 = (canvas.height / (layers[i] + 1)) * (j + 1);
+              const x2 = (i + 2) * layerDistance;
+              const y2 = (canvas.height / (layers[i + 1] + 1)) * (k + 1);
+              ctx.beginPath();
+              ctx.moveTo(x1 + nodeRadius, y1);
+              ctx.lineTo(x2 - nodeRadius, y2);
+              ctx.stroke();
             }
+          }
         }
-    }
 
-    canvas.onclick = activateNode;
-}
+        canvas.onclick = activateNode;
+      };
 
 function activateNode(event) {
     const canvas = document.getElementById('networkCanvas');
@@ -231,8 +203,7 @@ function activateNode(event) {
             node.activated = true;
             propagateActivation(node.layer, node.index);
             drawActivatedNetwork();
-            break;
-        }
+            break        }
     }
 }
 
@@ -284,14 +255,7 @@ function drawActivatedNetwork() {
     }
 }
 
-// 초기화 함수에 추가
-function initializeAll() {
-    // ... 기존 코드 ...
-    drawNeuralNetwork();
-    // ... 기존 코드 ...
-}
 // 이미지 분류 시뮬레이션
-
 const imageData = [
     { src: "images/roses_vintage.jpg", label: "roses", description: "빈티지 스타일의 장미 이미지" },
     { src: "images/dandelion_field.jpg", label: "dandelion", description: "민들레 들판" },
@@ -306,17 +270,16 @@ const imageData = [
 
 function setupImageClassification() {
     const imageContainer = document.getElementById('imageContainer');
-    imageContainer.innerHTML = ''; // 기존 내용 삭제
+    imageContainer.innerHTML = '';
 
     imageData.forEach((image) => {
         const imgElement = document.createElement('img');
         imgElement.src = image.src;
         imgElement.alt = image.description;
-        imgElement.title = image.description; // 마우스 오버시 설명 표시
+        imgElement.title = image.description;
         imgElement.classList.add('classification-image');
 
         imgElement.onclick = () => classifyImage(image.label, image.description);
-
         imageContainer.appendChild(imgElement);
     });
 }
@@ -327,12 +290,12 @@ function classifyImage(actualLabel, description) {
 
     if (Math.random() < 0.8) {
         predictedLabel = actualLabel;
-        confidence = (Math.random() * 20 + 80).toFixed(2); // 80-100% 신뢰도
+        confidence = (Math.random() * 20 + 80).toFixed(2);
     } else {
         do {
             predictedLabel = labels[Math.floor(Math.random() * labels.length)];
         } while (predictedLabel === actualLabel);
-        confidence = (Math.random() * 30 + 50).toFixed(2); // 50-80% 신뢰도
+        confidence = (Math.random() * 30 + 50).toFixed(2);
     }
 
     const resultText = `AI의 추측: ${predictedLabel} (확률: ${confidence}%)`;
@@ -344,33 +307,7 @@ function classifyImage(actualLabel, description) {
     updatePoints(predictedLabel === actualLabel ? 1 : 0);
 }
 
-// 초기화 함수에 추가
-function initializeAll() {
-    // ... 기존 코드 ...
-    setupImageClassification();
-    // ... 기존 코드 ...
-}
-
-// 페이지 로드 시 초기화
-window.addEventListener('DOMContentLoaded', initializeAll);
-
-// CSS 스타일
-const style = document.createElement('style');
-style.textContent = `
-    .classification-image {
-        width: 150px;
-        height: 150px;
-        object-fit: cover;
-        margin: 5px;
-        cursor: pointer;
-        transition: transform 0.3s ease;
-    }
-    .classification-image:hover {
-        transform: scale(1.1);
-    }
-`;
-document.head.appendChild(style);
-
+// 챗봇
 const responses = {
     "안녕": ["안녕하세요!", "반가워요!", "어서오세요!"],
     "이름": ["제 이름은 AI 친구예요.", "저는 AI 친구라고 해요.", "AI 친구라고 불러주세요!"],
@@ -440,18 +377,6 @@ function updateChatDisplay() {
     chatbox.scrollTop = chatbox.scrollHeight;
 }
 
-document.getElementById('userInput').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-});
-
-window.onload = function() {
-    addToChatHistory('Bot', '안녕하세요! 저는 AI 친구예요. 무엇을 도와드릴까요?\n(^_^)');
-    updateChatDisplay();
-};
-
-
 // 음성 인식 시뮬레이션
 function startVoiceRecognition() {
     const result = document.getElementById('voiceResult');
@@ -471,38 +396,9 @@ function startVoiceRecognition() {
     }, 2000);
 }
 
-const TARGET = "Hello, World!";
-const POPULATION_SIZE = 100;
-const MUTATION_RATE = 0.01;
-
-function generateRandomString(length) {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ,.!";
-    return Array(length).fill().map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
-}
-
-function calculateFitness(str) {
-    return [...str].reduce((acc, char, i) => acc + (char === TARGET[i] ? 1 : 0), 0);
-}
-
-function crossover(parent1, parent2) {
-    const midpoint = Math.floor(parent1.length / 2);
-    return parent1.slice(0, midpoint) + parent2.slice(midpoint);
-}
-
-function mutate(str) {
-    return [...str].map(char => 
-        Math.random() < MUTATION_RATE ? 
-            String.fromCharCode(Math.floor(Math.random() * 256)) : char
-    ).join('');
-}
-
-
-let sortingArray = [];
-let sortingInterval;
-let sortingSpeed = 50; // 기본 속도 (밀리초)
-
+// 데이터 정렬 시각화
 function generateRandomData() {
-    const size = 20; // 배열 크기
+    const size = 20;
     sortingArray = Array.from({length: size}, () => Math.floor(Math.random() * 100) + 1);
     visualizeSortingArray();
 }
@@ -522,7 +418,7 @@ function visualizeSortingArray() {
     });
 }
 
-async function startSorting() {
+function startSorting() {
     if (sortingInterval) {
         clearInterval(sortingInterval);
     }
@@ -557,13 +453,38 @@ function stopSorting() {
 }
 
 function changeSortingSpeed(speed) {
-    sortingSpeed = speed;
+    sortingSpeed = parseInt(speed);
     if (sortingInterval) {
         stopSorting();
         startSorting();
     }
 }
 
+// 유전 알고리즘
+const TARGET = "Hello, World!";
+const POPULATION_SIZE = 100;
+const MUTATION_RATE = 0.01;
+
+function generateRandomString(length) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz ,.!";
+    return Array(length).fill().map(() => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
+function calculateFitness(str) {
+    return [...str].reduce((acc, char, i) => acc + (char === TARGET[i] ? 1 : 0), 0);
+}
+
+function crossover(parent1, parent2) {
+    const midpoint = Math.floor(parent1.length / 2);
+    return parent1.slice(0, midpoint) + parent2.slice(midpoint);
+}
+
+function mutate(str) {
+    return [...str].map(char => 
+        Math.random() < MUTATION_RATE ? 
+            String.fromCharCode(Math.floor(Math.random() * 256)) : char
+    ).join('');
+}
 
 function startGeneticAlgorithm() {
     document.getElementById('targetString').textContent = TARGET;
@@ -601,21 +522,10 @@ function startGeneticAlgorithm() {
     }, 100);
 }
 
-// 초기화 함수에 추가
-function initializeAll() {
-    // ... 기존 코드 ...
-    document.getElementById('startGAButton').onclick = startGeneticAlgorithm;
-    // ... 기존 코드 ...
-}
-
-
 // 퍼즐 게임
-let puzzleState = [1, 2, 3, 4, 5, 6, 7, 8, 0];
-let moveCount = 0;
-
 function setupPuzzle() {
     const container = document.getElementById('puzzleContainer');
-    container.innerHTML = ''; // Clear existing pieces
+    container.innerHTML = '';
     puzzleState.forEach((num, index) => {
         const piece = document.createElement('div');
         piece.className = 'puzzle-piece';
@@ -625,7 +535,6 @@ function setupPuzzle() {
     });
     updatePuzzleDisplay();
 }
-
 
 function shufflePuzzle() {
     puzzleState = [1, 2, 3, 4, 5, 6, 7, 8, 0].sort(() => Math.random() - 0.5);
@@ -677,7 +586,42 @@ function initializeAll() {
     document.getElementById('startGAButton').onclick = startGeneticAlgorithm;
     setupImageClassification();
     generateRandomData();
+    document.getElementById('generateDataBtn').addEventListener('click', generateRandomData);
+    document.getElementById('startSortingBtn').addEventListener('click', startSorting);
+    document.getElementById('stopSortingBtn').addEventListener('click', stopSorting);
+    document.getElementById('sortingSpeedSlider').addEventListener('input', function() {
+        changeSortingSpeed(this.value);
+    });
+    document.getElementById('userInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+    addToChatHistory('Bot', '안녕하세요! 저는 AI 친구예요. 무엇을 도와드릴까요?\n(^_^)');
+    updateChatDisplay();
 }
 
 // 페이지 로드 시 모든 기능 초기화
-window.onload = initializeAll;
+window.addEventListener('DOMContentLoaded', initializeAll);
+
+// ... (이전 코드는 그대로 유지)
+
+// 페이지 로드 시 모든 기능 초기화
+window.addEventListener('DOMContentLoaded', initializeAll);
+
+// CSS 스타일
+const style = document.createElement('style');
+style.textContent = `
+    .classification-image {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        margin: 5px;
+        cursor: pointer;
+        transition: transform 0.3s ease;
+    }
+    .classification-image:hover {
+        transform: scale(1.1);
+    }
+`;
+document.head.appendChild(style);
