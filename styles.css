@@ -113,6 +113,25 @@ input[type="number"], input[type="text"], select {
     transform: scale(1.1);
 }
 
+#imageContainer img:hover {
+    transform: scale(1.1);
+}
+
+#classificationResult {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 1.2em;
+    background-color: #FFFFD1;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+
+
+
+
+
 #chatbox {
     font-family: 'Press Start 2P', cursive;
     height: 400px;

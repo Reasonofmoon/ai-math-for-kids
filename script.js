@@ -212,25 +212,24 @@ function drawNeuralNetwork() {
 
     updatePoints(2);
 }
-// 이미지 데이터
+// 이미지 분류 시뮬레이션
 const imageData = [
-    { src: "image/roses_vintage.jpg", label: "roses", description: "빈티지 스타일의 장미 이미지" },
-    { src: "image/dandelion_field.jpg", label: "dandelion", description: "민들레 들판" },
-    { src: "image/tulips_windmill.jpg", label: "tulips", description: "풍차와 튤립 밭" },
-    { src: "image/sunflowers.jpg", label: "sunflowers", description: "해바라기 밭" },
-    { src: "image/dandelion_closeup.jpg", label: "dandelion", description: "민들레 클로즈업" },
-    { src: "image/roses_bouquet.jpg", label: "roses", description: "장미 꽃다발" },
-    { src: "image/dandelion_seeds.jpg", label: "dandelion", description: "민들레 씨앗" },
-    { src: "image/roses_fountain.jpg", label: "roses", description: "분수와 장미" },
-    { src: "image/tulips_colorful.jpg", label: "tulips", description: "다양한 색상의 튤립" }
+    { src: "images/roses_vintage.jpg", label: "roses", description: "빈티지 스타일의 장미 이미지" },
+    { src: "images/dandelion_field.jpg", label: "dandelion", description: "민들레 들판" },
+    { src: "images/tulips_windmill.jpg", label: "tulips", description: "풍차와 튤립 밭" },
+    { src: "images/sunflowers.jpg", label: "sunflowers", description: "해바라기 밭" },
+    { src: "images/dandelion_closeup.jpg", label: "dandelion", description: "민들레 클로즈업" },
+    { src: "images/roses_bouquet.jpg", label: "roses", description: "장미 꽃다발" },
+    { src: "images/dandelion_seeds.jpg", label: "dandelion", description: "민들레 씨앗" },
+    { src: "images/roses_fountain.jpg", label: "roses", description: "분수와 장미" },
+    { src: "images/tulips_colorful.jpg", label: "tulips", description: "다양한 색상의 튤립" }
 ];
 
-// 이미지 분류 시뮬레이션
 function setupImageClassification() {
     const imageContainer = document.getElementById('imageContainer');
     imageContainer.innerHTML = ''; // 기존 내용 삭제
 
-    imageData.forEach((image, index) => {
+    imageData.forEach((image) => {
         const imgElement = document.createElement('img');
         imgElement.src = image.src;
         imgElement.alt = image.description;
@@ -251,10 +250,8 @@ function setupImageClassification() {
 
 function classifyImage(actualLabel, description) {
     const labels = ['roses', 'dandelion', 'tulips', 'sunflowers'];
-    let predictedLabel;
-    let confidence;
+    let predictedLabel, confidence;
 
-    // 80% 확률로 정확한 레이블 선택, 20% 확률로 랜덤 레이블 선택
     if (Math.random() < 0.8) {
         predictedLabel = actualLabel;
         confidence = (Math.random() * 20 + 80).toFixed(2); // 80-100% 신뢰도
@@ -274,11 +271,17 @@ function classifyImage(actualLabel, description) {
     updatePoints(3);
 }
 
-// 페이지 로드 시 이미지 분류 시뮬레이션 설정
-window.onload = function() {
+// 초기화 함수
+function initializeAll() {
+    drawChart();
+    generatePattern();
+    initScatterPlot();
     setupImageClassification();
     // 다른 초기화 함수들...
-};
+}
+
+// 페이지 로드 시 모든 기능 초기화
+window.onload = initializeAll;
 
 const responses = {
     "안녕": ["안녕하세요!", "반가워요!", "어서오세요!"],
@@ -411,79 +414,11 @@ async function startSorting() {
     }
     updatePoints(5);
 }
-
-// 유전 알고리즘 시뮬레이션
-let targetString = "Hello, World!";
-let populationSize = 100;
-let mutationRate = 0.01;
-
-function startGeneticAlgorithm() {
-    document.getElementById('targetString').textContent = targetString;
-    let population = initializePopulation();
-    let generation = 0;
-    const gaResultElement = document.getElementById('gaResult');
-
-    gaInterval = setInterval(() => {
-        population = evolve(population);
-        const bestIndividual = population[0];
-        gaResultElement.innerHTML = `
-            세대: ${generation}<br>
-            최적 해: ${bestIndividual}<br>
-            적합도: ${calculateFitness(bestIndividual)}/${targetString.length}
-        `;
-        if (bestIndividual === targetString) {
-            clearInterval(gaInterval);
-            gaResultElement.innerHTML += '<br>목표 달성!';
-            updatePoints(10);
-        }
-        generation++;
-    }, 100);
-}
-
-function initializePopulation() {
-    return Array.from({length: populationSize}, () => 
-        Array.from({length: targetString.length}, () => 
-            String.fromCharCode(Math.floor(Math.random() * 95) + 32)
-        ).join('')
-    );
-}
-
-function calculateFitness(individual) {
-    return individual.split('').filter((char, i) => char === targetString[i]).length;
-}
-
-function evolve(population) {
-    const newPopulation = [];
-    while (newPopulation.length < populationSize) {
-        const parent1 = selectParent(population);
-        const parent2 = selectParent(population);
-        let child = crossover(parent1, parent2);
-        child = mutate(child);
-        newPopulation.push(child);
-    }
-    return newPopulation.sort((a, b) => calculateFitness(b) - calculateFitness(a));
-}
-
-function selectParent(population) {
-    const tournamentSize = 5;
-    const tournament = Array.from({length: tournamentSize}, () => 
-        population[Math.floor(Math.random() * population.length)]
-    );
-    return tournament.reduce((best, current) => 
-        calculateFitness(current) > calculateFitness(best) ? current : best
-    );
-}
-
 function crossover(parent1, parent2) {
-    const midpoint = Math.floor(parent1.length / 2);
-    return parent1.slice(0, midpoint) + parent2.slice(midpoint);
+  const midpoint = Math.floor(parent1.length / 2);
+  return parent1.slice(0, midpoint) + parent2.slice(midpoint);
 }
 
-function mutate(individual) {
-    return individual.split('').map(char => 
-        Math.random() < mutationRate ? String.fromCharCode(Math.floor(Math.random() * 95) + 32) : char
-    ).join('');
-}
 
 // 퍼즐 게임
 let puzzleState = [1, 2, 3, 4, 5, 6, 7, 8, 0];
