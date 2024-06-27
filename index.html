@@ -83,8 +83,13 @@
 
         <div class="section" id="dataSorting">
             <h2>8. 데이터 정렬 시각화</h2>
-            <button onclick="generateRandomData()">무작위 데이터 생성</button>
-            <button onclick="startSorting()">정렬 시작</button>
+            <div id="sortingControls">
+                <button onclick="generateRandomData()">새로운 데이터 생성</button>
+                <button onclick="startSorting()">정렬 시작</button>
+                <button onclick="stopSorting()">정렬 중지</button>
+                <input type="range" min="10" max="1000" value="50" onchange="changeSortingSpeed(this.value)">
+                <span>정렬 속도 조절</span>
+            </div>
             <div id="sortingVisualization"></div>
         </div>
 

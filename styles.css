@@ -192,23 +192,16 @@ input[type="number"], input[type="text"], select {
 
 #sortingVisualization {
     display: flex;
-    justify-content: center;
     align-items: flex-end;
-    height: 200px;
-    border: 2px solid #4ECDC4;
-    border-radius: 15px;
-    background-color: #F7FFF7;
-    padding: 10px;
+    height: 300px;
+    border: 1px solid #ccc;
+    margin-top: 20px;
 }
-
 .bar {
-    width: 25px;
-    background-color: #FF6B6B;
-    margin: 0 2px;
-    border-radius: 5px 5px 0 0;
-    transition: height 0.3s ease;
+    background-color: #3498db;
+    margin: 0 1px;
+    transition: height 0.2s ease;
 }
-
 #puzzleContainer {
     display: grid;
     grid-template-columns: repeat(3, 1fr);

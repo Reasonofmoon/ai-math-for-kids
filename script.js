@@ -496,6 +496,75 @@ function mutate(str) {
     ).join('');
 }
 
+
+let sortingArray = [];
+let sortingInterval;
+let sortingSpeed = 50; // 기본 속도 (밀리초)
+
+function generateRandomData() {
+    const size = 20; // 배열 크기
+    sortingArray = Array.from({length: size}, () => Math.floor(Math.random() * 100) + 1);
+    visualizeSortingArray();
+}
+
+function visualizeSortingArray() {
+    const container = document.getElementById('sortingVisualization');
+    container.innerHTML = '';
+    const maxValue = Math.max(...sortingArray);
+    
+    sortingArray.forEach((value, index) => {
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = `${(value / maxValue) * 100}%`;
+        bar.style.width = `${100 / sortingArray.length}%`;
+        bar.title = value;
+        container.appendChild(bar);
+    });
+}
+
+async function startSorting() {
+    if (sortingInterval) {
+        clearInterval(sortingInterval);
+    }
+    
+    let i = 0;
+    let j = 0;
+    const n = sortingArray.length;
+
+    sortingInterval = setInterval(() => {
+        if (i < n - 1) {
+            if (j < n - i - 1) {
+                if (sortingArray[j] > sortingArray[j + 1]) {
+                    [sortingArray[j], sortingArray[j + 1]] = [sortingArray[j + 1], sortingArray[j]];
+                    visualizeSortingArray();
+                }
+                j++;
+            } else {
+                j = 0;
+                i++;
+            }
+        } else {
+            clearInterval(sortingInterval);
+            updatePoints(5);
+        }
+    }, sortingSpeed);
+}
+
+function stopSorting() {
+    if (sortingInterval) {
+        clearInterval(sortingInterval);
+    }
+}
+
+function changeSortingSpeed(speed) {
+    sortingSpeed = speed;
+    if (sortingInterval) {
+        stopSorting();
+        startSorting();
+    }
+}
+
+
 function startGeneticAlgorithm() {
     document.getElementById('targetString').textContent = TARGET;
     let population = Array(POPULATION_SIZE).fill().map(() => generateRandomString(TARGET.length));
