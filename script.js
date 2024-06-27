@@ -1,3 +1,4 @@
+// 전역 변수 선언
 let points = 0;
 let dataChart, scatterChart;
 let currentPattern = [];
@@ -10,24 +11,20 @@ let sortingSpeed = 50;
 let puzzleState = [1, 2, 3, 4, 5, 6, 7, 8, 0];
 let moveCount = 0;
 let networkNodes = [];
+let networkConnections = [];
 const layers = [3, 4, 4, 2];
 
+// 포인트 업데이트 함수
 function updatePoints(amount) {
     points += amount;
     document.getElementById('pointsDisplay').textContent = `포인트: ${points}`;
 }
 
-// 데이터 시각화
+// 데이터 시각화 함수
 function drawChart() {
     const ctx = document.getElementById('dataChart').getContext('2d');
     const chartType = document.getElementById('chartType').value;
-    const data = [
-        document.getElementById('data1').value,
-        document.getElementById('data2').value,
-        document.getElementById('data3').value,
-        document.getElementById('data4').value,
-        document.getElementById('data5').value
-    ].map(Number);
+    const data = Array.from({ length: 5 }, (_, i) => Number(document.getElementById(`data${i + 1}`).value));
 
     if (dataChart) {
         dataChart.destroy();
@@ -63,7 +60,7 @@ function drawChart() {
     updatePoints(1);
 }
 
-// 패턴 인식
+// 패턴 인식 함수
 function generatePattern() {
     const difficulty = document.getElementById('difficultyLevel').value;
     let pattern = [];
@@ -72,22 +69,16 @@ function generatePattern() {
     switch(difficulty) {
         case 'easy':
             rule = Math.floor(Math.random() * 5) + 1;
-            for (let i = 0; i < 5; i++) {
-                pattern.push(i * rule);
-            }
+            pattern = Array.from({ length: 5 }, (_, i) => i * rule);
             currentPatternAnswer = pattern[4] + rule;
             break;
         case 'medium':
             rule = Math.floor(Math.random() * 3) + 2;
-            for (let i = 0; i < 5; i++) {
-                pattern.push(Math.pow(rule, i));
-            }
+            pattern = Array.from({ length: 5 }, (_, i) => Math.pow(rule, i));
             currentPatternAnswer = Math.pow(rule, 5);
             break;
         case 'hard':
-            for (let i = 0; i < 5; i++) {
-                pattern.push(Math.floor(Math.random() * 10));
-            }
+            pattern = Array.from({ length: 5 }, () => Math.floor(Math.random() * 10));
             rule = (pattern[4] - pattern[3]) + (pattern[3] - pattern[2]);
             currentPatternAnswer = pattern[4] + rule;
             break;
@@ -97,6 +88,7 @@ function generatePattern() {
     document.getElementById('patternDisplay').textContent = pattern.join(', ') + ', ?';
 }
 
+// 패턴 확인 함수
 function checkPattern() {
     const guess = parseInt(document.getElementById('patternGuess').value);
     const result = document.getElementById('patternResult');
@@ -108,7 +100,7 @@ function checkPattern() {
     }
 }
 
-// 선형 회귀
+// 선형 회귀 초기화 함수
 function initScatterPlot() {
     const ctx = document.getElementById('scatterPlot').getContext('2d');
     scatterChart = new Chart(ctx, {
@@ -136,90 +128,50 @@ function initScatterPlot() {
                 scatterData.push({x: dataX, y: dataY});
                 scatterChart.update();
                 updatePoints(1);
+
+                if (scatterData.length >= 2) {
+                    drawRegressionLine();
+                }
             }
         }
     });
 }
-    scatterData: [
-      { x: 1, y: 2 },
-      { x: 2, y: 3 },
-      { x: 3, y: 4 },
-      { x: 4, y: 5 },
-      { x: 5, y: 6 },
-    ],
-      // 신경망 시각화
-      function drawNeuralNetwork() {
-        const canvas = document.getElementById("networkCanvas");
-        const ctx = canvas.getContext("2d");
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const layerDistance = canvas.width / (layers.length + 1);
-        const nodeRadius = 15;
+// 회귀선 그리기 함수
+function drawRegressionLine() {
+    const n = scatterData.length;
+    const sumX = scatterData.reduce((sum, point) => sum + point.x, 0);
+    const sumY = scatterData.reduce((sum, point) => sum + point.y, 0);
+    const sumXY = scatterData.reduce((sum, point) => sum + point.x * point.y, 0);
+    const sumX2 = scatterData.reduce((sum, point) => sum + point.x * point.x, 0);
 
-        networkNodes = [];
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    const intercept = (sumY - slope * sumX) / n;
 
-        // 노드 그리기
-        for (let i = 0; i < layers.length; i++) {
-          for (let j = 0; j < layers[i]; j++) {
-            const x = (i + 1) * layerDistance;
-            const y = (canvas.height / (layers[i] + 1)) * (j + 1);
-            ctx.beginPath();
-            ctx.arc(x, y, nodeRadius, 0, 2 * Math.PI);
-            ctx.fillStyle = "white";
-            ctx.fill();
-            ctx.stroke();
-            networkNodes.push({ x, y, layer: i, index: j, activated: false });
-          }
-        }
+    const minX = Math.min(...scatterData.map(p => p.x));
+    const maxX = Math.max(...scatterData.map(p => p.x));
 
-        // 연결선 그리기
-        for (let i = 0; i < layers.length - 1; i++) {
-          for (let j = 0; j < layers[i]; j++) {
-            for (let k = 0; k < layers[i + 1]; k++) {
-              const x1 = (i + 1) * layerDistance;
-              const y1 = (canvas.height / (layers[i] + 1)) * (j + 1);
-              const x2 = (i + 2) * layerDistance;
-              const y2 = (canvas.height / (layers[i + 1] + 1)) * (k + 1);
-              ctx.beginPath();
-              ctx.moveTo(x1 + nodeRadius, y1);
-              ctx.lineTo(x2 - nodeRadius, y2);
-              ctx.stroke();
-            }
-          }
-        }
+    // 기존 회귀선 데이터셋 제거
+    scatterChart.data.datasets = scatterChart.data.datasets.filter(dataset => dataset.label !== '회귀선');
 
-        canvas.onclick = activateNode;
-      };
+    // 새 회귀선 추가
+    scatterChart.data.datasets.push({
+        type: 'line',
+        label: '회귀선',
+        data: [
+            {x: minX, y: slope * minX + intercept},
+            {x: maxX, y: slope * maxX + intercept}
+        ],
+        borderColor: 'rgb(75, 192, 192)',
+        borderWidth: 2,
+        fill: false
+    });
 
-function activateNode(event) {
-    const canvas = document.getElementById('networkCanvas');
-    const rect = canvas.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-
-    for (let node of networkNodes) {
-        const distance = Math.sqrt((x - node.x)**2 + (y - node.y)**2);
-        if (distance <= 15) {
-            node.activated = true;
-            propagateActivation(node.layer, node.index);
-            drawActivatedNetwork();
-            break        }
-    }
+    scatterChart.update();
 }
 
-function propagateActivation(layer, index) {
-    if (layer >= layers.length - 1) return;
-
-    for (let i = 0; i < layers[layer + 1]; i++) {
-        const nextNode = networkNodes.find(n => n.layer === layer + 1 && n.index === i);
-        if (nextNode) {
-            nextNode.activated = true;
-            propagateActivation(layer + 1, i);
-        }
-    }
-}
-
-function drawActivatedNetwork() {
+// 신경망 그리기 함수
+function drawNeuralNetwork() {
     const canvas = document.getElementById('networkCanvas');
     const ctx = canvas.getContext('2d');
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -227,34 +179,124 @@ function drawActivatedNetwork() {
     const layerDistance = canvas.width / (layers.length + 1);
     const nodeRadius = 15;
 
+    networkNodes = [];
+    networkConnections = [];
+
+    // 노드 그리기
+    for (let i = 0; i < layers.length; i++) {
+        for (let j = 0; j < layers[i]; j++) {
+            const x = (i + 1) * layerDistance;
+            const y = (canvas.height / (layers[i] + 1)) * (j + 1);
+            ctx.beginPath();
+            ctx.arc(x, y, nodeRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.fill();
+            ctx.stroke();
+            networkNodes.push({x, y, layer: i, index: j, value: 0});
+        }
+    }
+
     // 연결선 그리기
     for (let i = 0; i < layers.length - 1; i++) {
         for (let j = 0; j < layers[i]; j++) {
             for (let k = 0; k < layers[i + 1]; k++) {
-                const node1 = networkNodes.find(n => n.layer === i && n.index === j);
-                const node2 = networkNodes.find(n => n.layer === i + 1 && n.index === k);
-                if (node1 && node2) {
-                    ctx.beginPath();
-                    ctx.moveTo(node1.x + nodeRadius, node1.y);
-                    ctx.lineTo(node2.x - nodeRadius, node2.y);
-                    ctx.strokeStyle = node1.activated && node2.activated ? 'red' : 'black';
-                    ctx.lineWidth = node1.activated && node2.activated ? 2 : 1;
-                    ctx.stroke();
-                }
+                const startNode = networkNodes.find(node => node.layer === i && node.index === j);
+                const endNode = networkNodes.find(node => node.layer === i + 1 && node.index === k);
+                ctx.beginPath();
+                ctx.moveTo(startNode.x + nodeRadius, startNode.y);
+                ctx.lineTo(endNode.x - nodeRadius, endNode.y);
+                ctx.stroke();
+                networkConnections.push({start: startNode, end: endNode, value: 0});
             }
         }
     }
 
-    // 노드 그리기
-    for (let node of networkNodes) {
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, nodeRadius, 0, 2 * Math.PI);
-        ctx.fillStyle = node.activated ? 'red' : 'white';
-        ctx.fill();
-        ctx.stroke();
+    canvas.onclick = activateNetwork;
+    updatePoints(2);
+}
+
+// 신경망 활성화 함수
+function activateNetwork(event) {
+    const canvas = document.getElementById('networkCanvas');
+    const rect = canvas.getBoundingClientRect();
+    const x = event.clientX - rect.left;
+    const y = event.clientY - rect.top;
+
+    // 클릭한 위치와 가장 가까운 입력 노드 찾기
+    const inputNodes = networkNodes.filter(node => node.layer === 0);
+    const clickedNode = inputNodes.reduce((closest, node) => {
+        const distance = Math.sqrt(Math.pow(x - node.x, 2) + Math.pow(y - node.y, 2));
+        return distance < closest.distance ? {node, distance} : closest;
+    }, {node: null, distance: Infinity}).node;
+
+    if (clickedNode) {
+        animateNetworkFlow(clickedNode);
     }
 }
 
+// 신경망 흐름 애니메이션 함수
+function animateNetworkFlow(startNode) {
+    const canvas = document.getElementById('networkCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // 모든 노드와 연결 초기화
+    networkNodes.forEach(node => node.value = 0);
+    networkConnections.forEach(conn => conn.value = 0);
+
+    startNode.value = 1;
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 노드 그리기
+        networkNodes.forEach(node => {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 15, 0, 2 * Math.PI);
+            ctx.fillStyle = `rgb(255, ${255 - node.value * 255}, ${255 - node.value * 255})`;
+            ctx.fill();
+            ctx.stroke();
+        });
+
+        // 연결선 그리기
+        networkConnections.forEach(conn => {
+            ctx.beginPath();
+            ctx.moveTo(conn.start.x + 15, conn.start.y);
+            ctx.lineTo(conn.end.x - 15, conn.end.y);
+            ctx.strokeStyle = `rgba(0, 0, 255, ${conn.value})`;
+            ctx.lineWidth = 2 + 3 * conn.value;
+            ctx.stroke();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'black';
+        });
+
+        // 다음 레이어로 값 전파
+        const currentLayer = networkNodes.find(node => node.value > 0).layer;
+        if (currentLayer < layers.length - 1) {
+            networkNodes.filter(node => node.layer === currentLayer && node.value > 0).forEach(activeNode => {
+                const connections = networkConnections.filter(conn => conn.start === activeNode);
+                connections.forEach(conn => {
+                    conn.value = Math.min(conn.value + 0.1, 1);
+                    conn.end.value = Math.max(conn.end.value, conn.value);
+                });
+            });
+            requestAnimationFrame(animate);
+        }
+    }
+
+    animate();
+}
+
+// 초기화 함수
+function initializeAll() {
+    drawChart();
+    generatePattern();
+    initScatterPlot();
+    drawNeuralNetwork();
+    // 기타 초기화 함수들...
+}
+
+// 페이지 로드 시 모든 기능 초기화
+window.addEventListener('DOMContentLoaded', initializeAll);
 // 이미지 분류 시뮬레이션
 const imageData = [
     { src: "images/roses_vintage.jpg", label: "roses", description: "빈티지 스타일의 장미 이미지" },
